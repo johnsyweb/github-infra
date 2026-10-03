@@ -1,0 +1,31 @@
+name: sync-renovate-repos
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'renovate/repos.yaml'
+      - 'script/sync-renovate-repos'
+      - '.github/workflows/sync-renovate-repos.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Sync Renovate repository membership
+        env:
+          RENOVATE_SYNC_PAT: ${{ secrets.RENOVATE_SYNC_PAT }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+        run: |
+          if [ -z "${RENOVATE_SYNC_PAT}" ]; then
+            echo "::error::Set repository secret RENOVATE_SYNC_PAT (classic PAT with repo scope)"
+            exit 1
+          fi
+          chmod +x script/sync-renovate-repos
+          ./script/sync-renovate-repos

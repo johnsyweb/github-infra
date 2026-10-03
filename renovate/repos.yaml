@@ -1,0 +1,8 @@
+# Mend Renovate installation membership for johnsyweb.
+# After the one-time marketplace install (see README), set installation_id
+# and list repositories that should have Renovate. The sync workflow applies
+# this file via the GitHub user installations API.
+
+installation_id: 0 # replace with Mend Renovate installation id
+repos:
+  - ambassy

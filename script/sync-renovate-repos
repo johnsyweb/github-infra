@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# Sync Mend Renovate app repository membership to renovate/repos.yaml.
+# Requires: gh, yq (or python3), RENOVATE_SYNC_PAT or GH_TOKEN with classic repo scope.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+config="${1:-renovate/repos.yaml}"
+owner="${GITHUB_REPOSITORY_OWNER:-johnsyweb}"
+
+if [[ ! -f "$config" ]]; then
+  echo "error: missing $config" >&2
+  exit 1
+fi
+
+if [[ -z "${GH_TOKEN:-${RENOVATE_SYNC_PAT:-${GITHUB_TOKEN:-}}}" ]]; then
+  echo "error: set RENOVATE_SYNC_PAT or GH_TOKEN (classic PAT with repo scope)" >&2
+  exit 1
+fi
+export GH_TOKEN="${RENOVATE_SYNC_PAT:-${GH_TOKEN:-$GITHUB_TOKEN}}"
+
+read_config() {
+  python3 - "$config" <<'PY'
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+text = path.read_text()
+installation_id = None
+repos = []
+in_repos = False
+for raw in text.splitlines():
+    line = raw.split("#", 1)[0].rstrip()
+    if not line.strip():
+        continue
+    if line.startswith("installation_id:"):
+        installation_id = line.split(":", 1)[1].strip()
+        in_repos = False
+        continue
+    if line.strip() == "repos:":
+        in_repos = True
+        continue
+    if in_repos and line.strip().startswith("- "):
+        repos.append(line.strip()[2:].strip().strip("'\""))
+        continue
+    if not line.startswith(" ") and not line.startswith("-"):
+        in_repos = False
+
+if not installation_id or installation_id in {"null", ""}:
+    raise SystemExit("error: set installation_id in renovate/repos.yaml")
+print(installation_id)
+for repo in repos:
+    print(repo)
+PY
+}
+
+mapfile -t lines < <(read_config)
+installation_id="${lines[0]}"
+desired=("${lines[@]:1}")
+
+if [[ "$installation_id" == "0" ]]; then
+  echo "installation_id is still 0 — install Mend Renovate and set the id (see README). Skipping sync."
+  exit 0
+fi
+
+if [[ ${#desired[@]} -eq 0 ]]; then
+  echo "error: repos list is empty" >&2
+  exit 1
+fi
+
+echo "Installation: $installation_id"
+echo "Desired repos (${#desired[@]}): ${desired[*]}"
+
+# Current repos on the installation (names only)
+mapfile -t current < <(
+  gh api --paginate "user/installations/${installation_id}/repositories" \
+    --jq '.repositories[].name' | sort -u
+)
+
+echo "Current repos (${#current[@]}): ${current[*]:-}"
+
+is_desired() {
+  local name="$1"
+  local r
+  for r in "${desired[@]}"; do
+    [[ "$r" == "$name" ]] && return 0
+  done
+  return 1
+}
+
+is_current() {
+  local name="$1"
+  local r
+  for r in "${current[@]:-}"; do
+    [[ "$r" == "$name" ]] && return 0
+  done
+  return 1
+}
+
+for name in "${desired[@]}"; do
+  if is_current "$name"; then
+    echo "keep: $name"
+    continue
+  fi
+  echo "add: $name"
+  repo_id="$(gh api "repos/${owner}/${name}" --jq '.id')"
+  gh api --method PUT "user/installations/${installation_id}/repositories/${repo_id}" >/dev/null
+done
+
+for name in "${current[@]:-}"; do
+  if is_desired "$name"; then
+    continue
+  fi
+  echo "remove: $name"
+  repo_id="$(gh api "repos/${owner}/${name}" --jq '.id')"
+  gh api --method DELETE "user/installations/${installation_id}/repositories/${repo_id}" >/dev/null
+done
+
+echo "sync complete"
