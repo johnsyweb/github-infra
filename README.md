@@ -23,14 +23,20 @@ Put it into [`renovate/repos.yaml`](renovate/repos.yaml) as `installation_id`.
 
 ### Create `RENOVATE_SYNC_PAT`
 
-GitHub’s “add/remove repo on installation” endpoints require a **classic** PAT with the **`repo`** scope (not a fine-grained token, not `GITHUB_TOKEN`).
+GitHub’s installation membership endpoints require a **classic** PAT (not fine-grained, not `GITHUB_TOKEN`) with:
+
+| Scope | Why |
+| --- | --- |
+| `repo` | Add/remove repositories on the installation |
+| `read:user` | List repositories already on the installation |
+
+Create at [github.com/settings/tokens](https://github.com/settings/tokens) (classic), then:
 
 ```bash
-# Create a classic PAT in the browser (repo scope), then:
 gh secret set RENOVATE_SYNC_PAT --repo johnsyweb/github-infra
 ```
 
-Paste the token when prompted. Rotate periodically.
+Paste the token when prompted. Rotate periodically. If sync fails with HTTP 403 mentioning `read:user`, recreate the PAT with both scopes and set the secret again.
 
 ## Desired state
 
@@ -47,7 +53,7 @@ Push to `main` (or run **sync-renovate-repos** via `workflow_dispatch`) to apply
 Local dry run (with the PAT exported):
 
 ```bash
-export RENOVATE_SYNC_PAT=…   # classic, repo scope
+export RENOVATE_SYNC_PAT=…   # classic: repo + read:user
 ./script/sync-renovate-repos
 ```
 

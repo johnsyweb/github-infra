@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sync Mend Renovate app repository membership to renovate/repos.yaml.
-# Requires: gh, yq (or python3), RENOVATE_SYNC_PAT or GH_TOKEN with classic repo scope.
+# Requires: gh, python3, RENOVATE_SYNC_PAT — classic PAT with repo + read:user.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -14,7 +14,7 @@ if [[ ! -f "$config" ]]; then
 fi
 
 if [[ -z "${GH_TOKEN:-${RENOVATE_SYNC_PAT:-${GITHUB_TOKEN:-}}}" ]]; then
-  echo "error: set RENOVATE_SYNC_PAT or GH_TOKEN (classic PAT with repo scope)" >&2
+  echo "error: set RENOVATE_SYNC_PAT (classic PAT with repo + read:user)" >&2
   exit 1
 fi
 export GH_TOKEN="${RENOVATE_SYNC_PAT:-${GH_TOKEN:-$GITHUB_TOKEN}}"
@@ -71,13 +71,19 @@ fi
 echo "Installation: $installation_id"
 echo "Desired repos (${#desired[@]}): ${desired[*]}"
 
-# Current repos on the installation (names only)
-mapfile -t current < <(
-  gh api --paginate "user/installations/${installation_id}/repositories" \
-    --jq '.repositories[].name' | sort -u
-)
+list_tmp="$(mktemp)"
+trap 'rm -f "$list_tmp"' EXIT
 
-echo "Current repos (${#current[@]}): ${current[*]:-}"
+if ! gh api --paginate "user/installations/${installation_id}/repositories" \
+  --jq '.repositories[].name' >"$list_tmp" 2>"${list_tmp}.err"; then
+  echo "error: failed to list installation repositories" >&2
+  cat "${list_tmp}.err" >&2 || true
+  echo "hint: RENOVATE_SYNC_PAT must be a classic PAT with scopes: repo, read:user" >&2
+  exit 1
+fi
+
+mapfile -t current < <(sort -u "$list_tmp")
+echo "Current repos (${#current[@]}): ${current[*]:-(none)}"
 
 is_desired() {
   local name="$1"
