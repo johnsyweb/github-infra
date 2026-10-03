@@ -13,11 +13,13 @@ Shared Renovate *config* and the no-App aube-lock workflow live in [johnsyweb/re
 
 ### Find `installation_id`
 
-```bash
-gh api user/installations --jq '.installations[] | select(.app_slug=="renovate") | {id, repository_selection, html_url}'
-```
+`GET /user/installations` only accepts a **GitHub App user-to-server** token, so a normal `gh auth` / PAT call returns HTTP 403. Read the id from the browser instead:
 
-Put that `id` into [`renovate/repos.yaml`](renovate/repos.yaml) as `installation_id`.
+1. Open [Installed GitHub Apps](https://github.com/settings/installations) (or [Configure Renovate](https://github.com/apps/renovate)).
+2. Click **Configure** next to Renovate.
+3. The URL is `https://github.com/settings/installations/<installation_id>` — use that number.
+
+Put it into [`renovate/repos.yaml`](renovate/repos.yaml) as `installation_id`.
 
 ### Create `RENOVATE_SYNC_PAT`
 
