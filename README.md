@@ -40,12 +40,13 @@ Paste the token when prompted. Rotate periodically. If sync fails with HTTP 403 
 
 ## Desired state
 
-[`renovate/repos.yaml`](renovate/repos.yaml):
+[`renovate/repos.yaml`](renovate/repos.yaml) — keep `repos:` sorted alphabetically:
 
 ```yaml
 installation_id: 12345678
 repos:
   - ambassy
+  - progression
 ```
 
 Push to `main` (or run **sync-renovate-repos** via `workflow_dispatch`) to apply. The workflow adds missing repos and removes extras.
@@ -60,7 +61,7 @@ export RENOVATE_SYNC_PAT=…   # classic: repo + read:user
 ## Adding a repo to the Renovate fleet
 
 1. Land Renovate + aube-lock in that repository (see renovate-config README).
-2. Add the repo name under `repos:` in `renovate/repos.yaml`.
+2. Insert the repo name under `repos:` in `renovate/repos.yaml` in alphabetical order.
 3. Merge; sync workflow updates the Mend installation.
 
 ## Out of scope
