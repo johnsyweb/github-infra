@@ -59,7 +59,7 @@ export RENOVATE_SYNC_PAT=…   # classic: repo + read:user
 
 ## Adding a repo to the Renovate fleet
 
-1. Land Renovate + aube-lock in that repository (see renovate-config README).
+1. Land Renovate + aube-lock in that repository, including the README refresh gate (see [renovate-config README — Use in a repo](https://github.com/johnsyweb/renovate-config#use-in-a-repo)).
 2. Add the repo name under `repos:` in `renovate/repos.yaml`.
 3. Merge; sync workflow updates the Mend installation.
 
