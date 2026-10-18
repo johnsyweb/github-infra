@@ -45,8 +45,10 @@ Paste the token when prompted. Rotate periodically. If sync fails with HTTP 403 
 ```yaml
 installation_id: 12345678
 repos:
+  - agent-skills
   - ambassy
   - progression
+  - tampermonkey-parkrun
 ```
 
 Push to `main` (or run **sync-renovate-repos** via `workflow_dispatch`) to apply. The workflow adds missing repos and removes extras.
