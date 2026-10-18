@@ -15,6 +15,8 @@ installation_id: 167440087
 repos:
   - agent-skills
   - ambassy
+  - eventuate
+  - parkrun-by-lga
   - progression
   - tampermonkey-parkrun
 ```
