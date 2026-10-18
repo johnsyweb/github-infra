@@ -5,6 +5,8 @@
 
 installation_id: 167440087
 repos:
+  - agent-skills
   - ambassy
   - progression
+  - tampermonkey-parkrun
 

@@ -8,13 +8,15 @@ Keeps fleet membership in git instead of the Mend UI, so adding or removing a Re
 
 ## Getting started
 
-Edit [`renovate/repos.yaml`](renovate/repos.yaml) so `repos:` lists every repository the Mend app should access, then merge to `main` (or run **sync-renovate-repos** via `workflow_dispatch`). The workflow adds missing repos and removes extras.
+Edit [`renovate/repos.yaml`](renovate/repos.yaml) so `repos:` lists every repository the Mend app should access (sorted alphabetically), then merge to `main` (or run **sync-renovate-repos** via `workflow_dispatch`). The workflow adds missing repos and removes extras.
 
 ```yaml
 installation_id: 167440087
 repos:
+  - agent-skills
   - ambassy
   - progression
+  - tampermonkey-parkrun
 ```
 
 First-time account setup (Mend install, `installation_id`, `RENOVATE_SYNC_PAT`) is under [Local development](#local-development).
@@ -73,7 +75,7 @@ Rotate periodically. If sync fails with HTTP 403 mentioning `read:user`, recreat
 ### Adding a repo to the Renovate fleet
 
 1. Land Renovate + aube-lock in that repository, including the README refresh gate (see [renovate-config — Use in a repo](https://github.com/johnsyweb/renovate-config#use-in-a-repo)).
-2. Add the repo name under `repos:` in `renovate/repos.yaml`.
+2. Insert the repo name under `repos:` in `renovate/repos.yaml` in alphabetical order.
 3. Merge; sync workflow updates the Mend installation.
 
 ### Out of scope
