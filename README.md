@@ -15,6 +15,7 @@ installation_id: 167440087
 repos:
   - agent-skills
   - ambassy
+  - crashcourse
   - eventuate
   - parkrun-by-lga
   - progression
