@@ -16,6 +16,7 @@ repos:
   - agent-skills
   - ambassy
   - eventuate
+  - foretoken
   - parkrun-by-lga
   - progression
   - tampermonkey-parkrun
